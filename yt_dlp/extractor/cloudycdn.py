@@ -62,7 +62,8 @@ class CloudyCDNIE(InfoExtractor):
 
         formats, subtitles = [], {}
         for m3u8_url in traverse_obj(data, ('source', 'sources', ..., 'src', {url_or_none})):
-            fmts, subs = self._extract_m3u8_formats_and_subtitles(m3u8_url, video_id, fatal=False)
+            fmts, subs = self._extract_m3u8_formats_and_subtitles(
+                m3u8_url, video_id, fatal=False, separate_audio_without_codecs=True)
             formats.extend(fmts)
             self._merge_subtitles(subs, target=subtitles)
 

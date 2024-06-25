@@ -2025,7 +2025,7 @@ class InfoExtractor:
             self, m3u8_url, video_id, ext=None, entry_protocol='m3u8_native',
             preference=None, quality=None, m3u8_id=None, note=None,
             errnote=None, fatal=True, live=False, data=None, headers={},
-            query={}):
+            query={}, separate_audio_without_codecs=False):
 
         if self.get_param('ignore_no_formats_error'):
             fatal = False
@@ -2054,13 +2054,14 @@ class InfoExtractor:
             m3u8_doc, m3u8_url, ext=ext, entry_protocol=entry_protocol,
             preference=preference, quality=quality, m3u8_id=m3u8_id,
             note=note, errnote=errnote, fatal=fatal, live=live, data=data,
-            headers=headers, query=query, video_id=video_id)
+            headers=headers, query=query, video_id=video_id,
+            separate_audio_without_codecs=separate_audio_without_codecs)
 
     def _parse_m3u8_formats_and_subtitles(
             self, m3u8_doc, m3u8_url=None, ext=None, entry_protocol='m3u8_native',
             preference=None, quality=None, m3u8_id=None, live=False, note=None,
             errnote=None, fatal=True, data=None, headers={}, query={},
-            video_id=None):
+            video_id=None, separate_audio_without_codecs=False):
         formats, subtitles = [], {}
         has_drm = HlsFD._has_drm(m3u8_doc)
 
@@ -2254,8 +2255,9 @@ class InfoExtractor:
                     # referencing an audio group it represents a complete
                     # (with audio and video) format. So, for such cases we will
                     # ignore references to rendition groups and treat them
-                    # as complete formats.
-                    if audio_group_id and codecs and f.get('vcodec') != 'none':
+                    # as complete formats unless separate_audio_without_codecs
+                    # is set to True.
+                    if audio_group_id and (separate_audio_without_codecs or codecs) and f.get('vcodec') != 'none':
                         audio_group = groups.get(audio_group_id)
                         if audio_group and audio_group[0].get('URI'):
                             # TODO: update acodec for audio only formats with
