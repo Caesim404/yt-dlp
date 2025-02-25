@@ -11,7 +11,7 @@ from ..utils.traversal import traverse_obj
 
 
 class CloudyCDNIE(InfoExtractor):
-    _VALID_URL = r'(?:https?:)?//embed\.cloudycdn\.services/(?P<site_id>[^/?#]+)/media/(?P<id>[\w-]+)'
+    _VALID_URL = r'(?:https?:)?//embed\.(?P<domain>cloudycdn\.services|backscreen\.com)/(?P<site_id>[^/?#]+)/media/(?P<id>[\w-]+)'
     _EMBED_REGEX = [rf'<iframe[^>]+\bsrc=[\'"](?P<url>{_VALID_URL})']
     _TESTS = [{
         'url': 'https://embed.cloudycdn.services/ltv/media/46k_d23-6000-105?',
@@ -67,10 +67,10 @@ class CloudyCDNIE(InfoExtractor):
     }]
 
     def _real_extract(self, url):
-        site_id, video_id = self._match_valid_url(url).group('site_id', 'id')
+        domain, site_id, video_id = self._match_valid_url(url).group('domain', 'site_id', 'id')
 
         data = self._download_json(
-            f'https://player.cloudycdn.services/player/{site_id}/media/{video_id}/',
+            f'https://player.{domain}/player/{site_id}/media/{video_id}/',
             video_id, data=urlencode_postdata({
                 'version': '6.4.0',
                 'referer': url,

@@ -226,7 +226,7 @@ class LSMLTVEmbedIE(InfoExtractor):
 
 
 class LSMReplayIE(InfoExtractor):
-    _VALID_URL = r'https?://replay\.lsm\.lv/[^/?#]+/(?:ieraksts|statja)/[^/?#]+/(?P<id>\d+)'
+    _VALID_URL = r'https?://replay\.lsm\.lv/[^/?#]+/(?:skaties|klausies)/(?:ieraksts|statja)/[^/?#]+/(?P<id>\d+)'
     _TESTS = [{
         'url': 'https://replay.lsm.lv/lv/ieraksts/ltv/311130/4-studija-zolitudes-tragedija-un-incupes-stacija',
         'md5': '64f72a360ca530d5ed89c77646c9eee5',
@@ -267,12 +267,27 @@ class LSMReplayIE(InfoExtractor):
 
         data = self._search_nuxt_data(
             self._fix_nuxt_data(webpage), video_id, context_name='__REPLAY__')
+        playback_type = traverse_obj(data, ('playback', 'type'))
+
+        if playback_type == 'playable_audio_lr':
+            playback_data = {
+                'formats': self._extract_m3u8_formats(
+                    traverse_obj(data, ('playback', 'service', 'hls_url', {url_or_none})), video_id),
+            }
+        elif playback_type == 'embed':
+            playback_data = {
+                '_type': 'url_transparent',
+                **traverse_obj(data, {
+                    'url': ('playback', 'service', 'url', {url_or_none}),
+                }),
+            }
+        else:
+            raise ExtractorError(f'Unsupported playback type {playback_type!r}')
 
         return {
-            '_type': 'url_transparent',
             'id': video_id,
+            **playback_data,
             **traverse_obj(data, {
-                'url': ('playback', 'service', 'url', {url_or_none}),
                 'title': ('mediaItem', 'title'),
                 'description': ('mediaItem', ('lead', 'body')),
                 'duration': ('mediaItem', 'duration', {int_or_none}),
